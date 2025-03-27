@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button, input {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            background: #388e3c;
+        }
+        #clear-btn {
+            background: #f44336;
+        }
+        #clear-btn:hover {
+            background: #d32f2f;
+        }
+        #save-btn {
+            background: #2196f3;
+        }
+        #save-btn:hover {
+            background: #1976d2;
+        }
+        canvas {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Drawing App</h1>
+    <div class="controls">
+        <input type="color" id="color-picker" value="#000000">
+        <input type="range" id="brush-size" min="1" max="50" value="5">
+        <span id="brush-size-value">5</span>
+        <button id="clear-btn">Clear Canvas</button>
+        <button id="save-btn">Save Drawing</button>
+    </div>
+    <canvas id="drawing-canvas" width="800" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById("drawing-canvas");
+        const ctx = canvas.getContext("2d");
+        const colorPicker = document.getElementById("color-picker");
+        const brushSize = document.getElementById("brush-size");
+        const brushSizeValue = document.getElementById("brush-size-value");
+        const clearBtn = document.getElementById("clear-btn");
+        const saveBtn = document.getElementById("save-btn");
+
+        let isDrawing = false;
+        let currentColor = "#000000";
+        let currentSize = 5;
+
+        // Set initial canvas background
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Event listeners
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseout", stopDrawing);
+
+        colorPicker.addEventListener("input", (e) => {
+            currentColor = e.target.value;
+        });
+
+        brushSize.addEventListener("input", (e) => {
+            currentSize = e.target.value;
+            brushSizeValue.textContent = currentSize;
+        });
+
+        clearBtn.addEventListener("click", () => {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        saveBtn.addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.download = "drawing.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+
+        // Drawing functions
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            ctx.lineWidth = currentSize;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = currentColor;
+
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+    </script>
+</body>
+</html>

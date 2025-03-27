@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop To-Do List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .todo-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #task-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #add-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #add-btn:hover {
+            background: #388e3c;
+        }
+        .tasks {
+            list-style: none;
+            padding: 0;
+        }
+        .task {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: background 0.3s;
+        }
+        .task:hover {
+            background: #f0f0f0;
+        }
+        .task.dragging {
+            opacity: 0.5;
+            background: #e3f2fd;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h1>To-Do List</h1>
+        <div class="input-container">
+            <input type="text" id="task-input" placeholder="Add a new task">
+            <button id="add-btn">Add</button>
+        </div>
+        <ul class="tasks" id="tasks">
+            <!-- Tasks will be added here -->
+        </ul>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById("task-input");
+        const addBtn = document.getElementById("add-btn");
+        const tasksList = document.getElementById("tasks");
+
+        // Load tasks from localStorage
+        let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+        // Render tasks
+        function renderTasks() {
+            tasksList.innerHTML = "";
+            tasks.forEach((task, index) => {
+                const taskEl = document.createElement("li");
+                taskEl.className = "task";
+                taskEl.draggable = true;
+                taskEl.setAttribute("data-index", index);
+                taskEl.innerHTML = `
+                    <span>${task.text}</span>
+                    <button class="delete-btn">Delete</button>
+                `;
+                tasksList.appendChild(taskEl);
+            });
+
+            // Add event listeners for delete buttons
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const index = e.target.parentElement.getAttribute("data-index");
+                    tasks.splice(index, 1);
+                    saveTasks();
+                    renderTasks();
+                });
+            });
+
+            // Add drag and drop functionality
+            const draggables = document.querySelectorAll(".task");
+            draggables.forEach(task => {
+                task.addEventListener("dragstart", () => {
+                    task.classList.add("dragging");
+                });
+
+                task.addEventListener("dragend", () => {
+                    task.classList.remove("dragging");
+                });
+            });
+
+            tasksList.addEventListener("dragover", e => {
+                e.preventDefault();
+                const draggingTask = document.querySelector(".dragging");
+                const afterElement = getDragAfterElement(tasksList, e.clientY);
+                if (afterElement == null) {
+                    tasksList.appendChild(draggingTask);
+                } else {
+                    tasksList.insertBefore(draggingTask, afterElement);
+                }
+            });
+
+            tasksList.addEventListener("drop", () => {
+                const newTasks = [];
+                document.querySelectorAll(".task").forEach((task, newIndex) => {
+                    const oldIndex = task.getAttribute("data-index");
+                    newTasks[newIndex] = tasks[oldIndex];
+                });
+                tasks = newTasks;
+                saveTasks();
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll(".task:not(.dragging)")];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Add new task
+        addBtn.addEventListener("click", () => {
+            const text = taskInput.value.trim();
+            if (text) {
+                tasks.push({ text });
+                taskInput.value = "";
+                saveTasks();
+                renderTasks();
+            }
+        });
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        // Initial render
+        renderTasks();
+    </script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+        }
+
+        .sidebar h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .workout-history {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .workout-history h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-dumbbell"></i> Fitness Tracker</h1>
+            <p>Track your workouts and progress</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2>Log Workout</h2>
+                <form id="workout-form">
+                    <div class="form-group">
+                        <label for="exercise">Exercise</label>
+                        <select id="exercise" required>
+                            <option value="">Select Exercise</option>
+                            <option value="pushups">Pushups</option>
+                            <option value="squats">Squats</option>
+                            <option value="pullups">Pullups</option>
+                            <option value="lunges">Lunges</option>
+                            <option value="plank">Plank</option>
+                            <option value="running">Running</option>
+                            <option value="cycling">Cycling</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sets">Sets</label>
+                        <input type="number" id="sets" min="1" max="20" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reps">Reps/Duration (mins)</label>
+                        <input type="number" id="reps" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <button type="submit">Save Workout</button>
+                </form>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <h3>Workouts This Week</h3>
+                        <p class="stat-value" id="weekly-workouts">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Exercises</h3>
+                        <p class="stat-value" id="total-exercises">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Calories Burned</h3>
+                        <p class="stat-value" id="calories-burned">0</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h2>Weekly Progress</h2>
+                    <canvas id="progress-chart"></canvas>
+                </div>
+
+                <div class="workout-history">
+                    <h2>Workout History</h2>
+                    <table id="workout-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Exercise</th>
+                                <th>Sets</th>
+                                <th>Reps/Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Workouts will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        // Exercise database with calorie estimates
+        const exercises = {
+            pushups: { calories: 0.5, unit: "reps" },
+            squats: { calories: 0.4, unit: "reps" },
+            pullups: { calories: 1, unit: "reps" },
+            lunges: { calories: 0.5, unit: "reps" },
+            plank: { calories: 0.3, unit: "mins" },
+            running: { calories: 10, unit: "mins" },
+            cycling: { calories: 8, unit: "mins" }
+        };
+
+        // DOM Elements
+        const workoutForm = document.getElementById('workout-form');
+        const workoutTable = document.getElementById('workout-table').querySelector('tbody');
+        const weeklyWorkoutsEl = document.getElementById('weekly-workouts');
+        const totalExercisesEl = document.getElementById('total-exercises');
+        const caloriesBurnedEl = document.getElementById('calories-burned');
+
+        // Chart
+        const ctx = document.getElementById('progress-chart').getContext('2d');
+        let progressChart;
+
+        // Load workouts from localStorage
+        let workouts = JSON.parse(localStorage.getItem('workouts')) || [];
+
+        // Initialize the app
+        function init() {
+            renderWorkouts();
+            updateStats();
+            renderChart();
+            
+            // Form submission
+            workoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const exercise = document.getElementById('exercise').value;
+                const sets = parseInt(document.getElementById('sets').value);
+                const reps = parseInt(document.getElementById('reps').value);
+                const date = document.getElementById('date').value;
+                
+                // Calculate calories
+                const calories = calculateCalories(exercise, reps);
+                
+                // Add workout
+                workouts.push({
+                    id: Date.now(),
+                    date,
+                    exercise,
+                    sets,
+                    reps,
+                    calories
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('workouts', JSON.stringify(workouts));
+                
+                // Reset form
+                workoutForm.reset();
+                
+                // Update UI
+                renderWorkouts();
+                updateStats();
+                renderChart();
+            });
+        }
+
+        // Calculate calories burned
+        function calculateCalories(exercise, reps) {
+            const exerciseData = exercises[exercise];
+            if (exerciseData.unit === "mins") {
+                return Math.round(exerciseData.calories * reps);
+            } else {
+                return Math.round(exerciseData.calories * reps * 0.3); // Estimate for resistance exercises
+            }
+        }
+
+        // Render workouts table
+        function renderWorkouts() {
+            workoutTable.innerHTML = '';
+            
+            // Sort by date (newest first)
+            workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            workouts.forEach(workout => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${formatDate(workout.date)}</td>
+                    <td>${capitalizeFirstLetter(workout.exercise)}</td>
+                    <td>${workout.sets}</td>
+                    <td>${workout.reps} ${exercises[workout.exercise].unit}</td>
+                    <td>
+                        <button class="delete-btn" data-id="${workout.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                workoutTable.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteWorkout(id);
+                });
+            });
+        }
+
+        // Delete a workout
+        function deleteWorkout(id) {
+            workouts = workouts.filter(workout => workout.id !== id);
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            renderWorkouts();
+            updateStats();
+            renderChart();
+        }
+
+        // Update statistics
+        function updateStats() {
+            // Weekly workouts
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            
+            const weeklyWorkouts = workouts.filter(workout => {
+                return new Date(workout.date) >= oneWeekAgo;
+            }).length;
+            
+            weeklyWorkoutsEl.textContent = weeklyWorkouts;
+            
+            // Total exercises
+            totalExercisesEl.textContent = workouts.length;
+            
+            // Total calories
+            const totalCalories = workouts.reduce((sum, workout) => sum + workout.calories, 0);
+            caloriesBurnedEl.textContent = totalCalories;
+        }
+
+        // Render chart
+        function renderChart() {
+            // Group by date
+            const workoutsByDate = {};
+            
+            workouts.forEach(workout => {
+                if (!workoutsByDate[workout.date]) {
+                    workoutsByDate[workout.date] = 0;
+                }
+                workoutsByDate[workout.date] += workout.calories;
+            });
+            
+            // Get last 7 days
+            const dates = [];
+            const calories = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                dates.push(formatDate(dateStr));
+                calories.push(workoutsByDate[dateStr] || 0);
+            }
+            
+            // Destroy previous chart if exists
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            
+            // Create new chart
+            progressChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Calories Burned',
+                        data: calories,
+                        backgroundColor: '#4361ee',
+                        borderColor: '#3f37c9',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper functions
+        function formatDate(dateStr) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString(undefined, options);
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
